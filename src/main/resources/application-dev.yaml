@@ -1,0 +1,13 @@
+spring:
+  config:
+    import: "optional:file:.env.dev[.properties]"
+  datasource:
+    url: ${FORUM_DEV_DB_URL:jdbc:postgresql://localhost:5432/forum}
+    username: ${FORUM_DEV_DB_USERNAME:admin}
+    password: ${FORUM_DEV_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+forum:
+  security:
+    jwt:
+      secret: ${FORUM_DEV_JWT_SECRET}

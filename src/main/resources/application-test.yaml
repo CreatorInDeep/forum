@@ -1,0 +1,13 @@
+spring:
+  config:
+    import: "optional:file:.env.test[.properties]"
+  datasource:
+    url: ${FORUM_TEST_DB_URL}
+    username: ${FORUM_TEST_DB_USERNAME}
+    password: ${FORUM_TEST_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+forum:
+  security:
+    jwt:
+      secret: ${FORUM_TEST_JWT_SECRET}

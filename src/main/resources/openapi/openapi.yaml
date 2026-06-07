@@ -1,0 +1,522 @@
+openapi: 3.0.3
+info:
+  title: Forum API
+  version: 1.0.0
+  description: REST API for the forum application.
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login and receive a JWT access token
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid username or password
+  /post:
+    get:
+      tags: [Posts]
+      summary: List all posts
+      operationId: listPosts
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PostResponse"
+    post:
+      tags: [Posts]
+      summary: Create a post
+      operationId: createPost
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePost"
+      responses:
+        "201":
+          description: Post created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponse"
+        "401":
+          description: Missing or invalid JWT
+        "403":
+          description: Insufficient role
+  /post/{id}:
+    get:
+      tags: [Posts]
+      summary: Get post by id
+      operationId: getPostById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Post found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponse"
+        "404":
+          description: Post not found
+  /reply:
+    get:
+      tags: [Replies]
+      summary: List all replies
+      operationId: listReplies
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReplyResponse"
+    post:
+      tags: [Replies]
+      summary: Create a reply
+      operationId: createReply
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReply"
+      responses:
+        "201":
+          description: Reply created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyResponse"
+        "401":
+          description: Missing or invalid JWT
+        "403":
+          description: Insufficient role
+        "404":
+          description: Post not found
+  /reply/{id}:
+    get:
+      tags: [Replies]
+      summary: Get reply by id
+      operationId: getReplyById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Reply found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyResponse"
+        "404":
+          description: Reply not found
+  /maintenance/status:
+    get:
+      tags: [Maintenance]
+      summary: Get maintenance status
+      operationId: getMaintenanceStatus
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Maintenance status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceResponse"
+        "401":
+          description: Missing or invalid JWT
+        "403":
+          description: Admin role required
+  /maintenance/backup/start:
+    post:
+      tags: [Maintenance]
+      summary: Start backup mode
+      operationId: startBackupMaintenance
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaintenanceRequest"
+      responses:
+        "200":
+          description: Backup mode started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceResponse"
+        "401":
+          description: Missing or invalid JWT
+        "403":
+          description: Admin role required
+  /maintenance/restore/start:
+    post:
+      tags: [Maintenance]
+      summary: Start restore mode
+      operationId: startRestoreMaintenance
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaintenanceRequest"
+      responses:
+        "200":
+          description: Restore mode started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceResponse"
+        "401":
+          description: Missing or invalid JWT
+        "403":
+          description: Admin role required
+  /maintenance/finish:
+    post:
+      tags: [Maintenance]
+      summary: Finish maintenance mode
+      operationId: finishMaintenance
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Maintenance mode finished
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceResponse"
+        "401":
+          description: Missing or invalid JWT
+        "403":
+          description: Admin role required
+  /user:
+    get:
+      tags: [Users]
+      summary: List all users
+      operationId: listUsers
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserResponse"
+        "401":
+          description: Missing or invalid JWT
+        "403":
+          description: Admin role required
+    post:
+      tags: [Users]
+      summary: Create a user
+      operationId: createUser
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUser"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "409":
+          description: Username already exists
+        "401":
+          description: Missing or invalid JWT
+        "403":
+          description: Admin role required
+  /user/{id}:
+    get:
+      tags: [Users]
+      summary: Get user by id
+      operationId: getUserById
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "404":
+          description: User not found
+        "401":
+          description: Missing or invalid JWT
+        "403":
+          description: Admin role required
+    put:
+      tags: [Users]
+      summary: Update a user
+      operationId: updateUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUser"
+      responses:
+        "200":
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "404":
+          description: User not found
+        "409":
+          description: Username already taken
+        "401":
+          description: Missing or invalid JWT
+        "403":
+          description: Admin role required
+    delete:
+      tags: [Users]
+      summary: Delete a user
+      operationId: deleteUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "204":
+          description: User deleted
+        "404":
+          description: User not found
+        "401":
+          description: Missing or invalid JWT
+        "403":
+          description: Admin role required
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+    AuthResponse:
+      type: object
+      properties:
+        tokenType:
+          type: string
+          example: Bearer
+        accessToken:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        userId:
+          type: integer
+          format: int64
+        username:
+          type: string
+        role:
+          $ref: "#/components/schemas/UserRole"
+    CreatePost:
+      type: object
+      required: [title, content]
+      properties:
+        title:
+          type: string
+          maxLength: 500
+        content:
+          type: string
+    PostResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    CreateReply:
+      type: object
+      required: [postId, content]
+      properties:
+        postId:
+          type: integer
+          format: int64
+        content:
+          type: string
+    ReplyResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        postId:
+          type: integer
+          format: int64
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    MaintenanceMode:
+      type: string
+      enum: [NONE, BACKUP, RESTORE]
+    MaintenanceRequest:
+      type: object
+      properties:
+        retryAfterSeconds:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 86400
+        message:
+          type: string
+    MaintenanceResponse:
+      type: object
+      properties:
+        active:
+          type: boolean
+        mode:
+          $ref: "#/components/schemas/MaintenanceMode"
+        startedAt:
+          type: string
+          format: date-time
+        retryAfter:
+          type: string
+          format: date-time
+        retryAfterSeconds:
+          type: integer
+          format: int64
+        message:
+          type: string
+    UserRole:
+      type: string
+      description: Application role
+      enum: [admin, moderator, user]
+    CreateUser:
+      type: object
+      required: [username, role, password]
+      properties:
+        username:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        role:
+          $ref: "#/components/schemas/UserRole"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
+    UpdateUser:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        role:
+          $ref: "#/components/schemas/UserRole"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        email:
+          type: string
+        role:
+          $ref: "#/components/schemas/UserRole"
+        createdAt:
+          type: string
+          format: date-time

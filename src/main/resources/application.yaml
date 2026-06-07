@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: forum
+  profiles:
+    default: dev
+  jpa:
+    open-in-view: false
+    show-sql: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    locations: classpath:db/migration
+
+server:
+  port: ${FORUM_SERVER_PORT:9000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      group:
+        system:
+          include: db,ping,maintenance
+          additional-path: "server:/healthz"
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: false
+
+forum:
+  security:
+    jwt:
+      token-ttl: ${FORUM_JWT_TOKEN_TTL:PT1H}
