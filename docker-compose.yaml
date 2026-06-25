@@ -1,13 +1,14 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: forum-postgres
     environment:
       POSTGRES_DB: ${FORUM_DEV_DB_NAME:-forum}
       POSTGRES_USER: ${FORUM_DEV_DB_USERNAME:-admin}
       POSTGRES_PASSWORD: ${FORUM_DEV_DB_PASSWORD:-admin}
     ports:
-      - "5432:5432"
+      - "${FORUM_POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${FORUM_DEV_DB_USERNAME:-admin} -d ${FORUM_DEV_DB_NAME:-forum}"]
       interval: 5s
@@ -16,25 +17,27 @@ services:
 
   adminer:
     image: adminer:4
-    container_name: forum-adminer
     ports:
-      - "8090:8080"
+      - "${FORUM_ADMINER_PORT:-8090}:8080"
     depends_on:
       postgres:
         condition: service_healthy
 
-  forum-local:
+  backend:
     build:
-      context: .
-    container_name: forum-local
-    env_file:
-      - .env.local
+      context: ./Backend
+      dockerfile: Dockerfile
+    image: forum/backend:local
     environment:
-      FORUM_DEV_DB_URL: jdbc:postgresql://forum-postgres:5432/forum
+      SPRING_PROFILES_ACTIVE: dev
+      FORUM_SERVER_PORT: 9000
+      FORUM_JWT_TOKEN_TTL: ${FORUM_JWT_TOKEN_TTL:-PT1H}
+      FORUM_DEV_DB_URL: jdbc:postgresql://postgres:5432/${FORUM_DEV_DB_NAME:-forum}
       FORUM_DEV_DB_USERNAME: ${FORUM_DEV_DB_USERNAME:-admin}
       FORUM_DEV_DB_PASSWORD: ${FORUM_DEV_DB_PASSWORD:-admin}
+      FORUM_DEV_JWT_SECRET: ${FORUM_DEV_JWT_SECRET:-MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=}
     ports:
-      - "9000:9000"
+      - "${FORUM_BACKEND_PORT:-9000}:9000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -45,13 +48,23 @@ services:
       retries: 20
       start_period: 20s
 
-  forum-ui:
-    image: forum-ui
-    container_name: forum-ui
+  ui:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    image: forum/ui:local
     environment:
-      BACKEND_UPSTREAM: http://forum-local:9000
+      BACKEND_UPSTREAM: http://backend:9000
     ports:
-      - "2233:80"
+      - "${FORUM_UI_PORT:-2233}:80"
     depends_on:
-      forum-local:
+      backend:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres-data:
